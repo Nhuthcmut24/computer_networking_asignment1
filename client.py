@@ -104,7 +104,7 @@ class FileSharingClient:
 
     def run_command_shell(self):
         while True:
-            command = input("Enter command: ")
+            command = input("Enter command:(publish <Iname> <fname>/fetch <fname>) ")
             if command.startswith("publish"):
                 parts = command.split()
                 if len(parts) != 3:
@@ -122,8 +122,12 @@ class FileSharingClient:
                     self.fetch_file(file_name)
                 else:
                     print("Invalid fetch command. Usage: fetch fname")
+            elif command.startswith("exit"):
+                print("Exit")
+                break
             else:
                 print("Unknown command")
+                
 
     def validate_publish_command(self, command):
         """Validate the publish command."""
@@ -140,5 +144,5 @@ class FileSharingClient:
         return len(parts) == 2 and parts[1].strip() != ""
 
 # Usage Example
-client = FileSharingClient("172.20.95.197", 9999)
+client = FileSharingClient("192.168.137.67", 9999)
 client.run_command_shell()

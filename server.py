@@ -20,23 +20,51 @@ class FileSharingServer:
         self.server_socket.listen(5)
         # self.receive_messages_in_a_new_thread()
 
+    # def handle_client(self, client_socket):
+
+    #     while True:
+    #         try:
+    #             message = client_socket.recv(1024).decode('utf-8')
+    #             if not message:
+    #                 break
+
+    #             command, data = self.parse_client_message(message)
+    #             if command == 'publish':
+    #                 self.publish_files(client_socket, data)
+    #             elif command == 'fetch':
+    #                 self.send_file_sources(client_socket, data)
+    #         except socket.error:
+    #             print("Unknown command")
+    #             break
+
+    #     client_socket.close()  # Close the client socket
     def handle_client(self, client_socket):
-        while True:
-            try:
+        client_ip = client_socket.getpeername()[0]
+        try:
+            while True:
                 message = client_socket.recv(1024).decode('utf-8')
+                # Break the loop if message is empty, indicating a disconnection
                 if not message:
+                    print(f"Client {client_ip} disconnected")
                     break
 
-                command, data = self.parse_client_message(message)
-                if command == 'publish':
-                    self.publish_files(client_socket, data)
-                elif command == 'fetch':
-                    self.send_file_sources(client_socket, data)
-
-            except socket.error:
-                break
-
-        client_socket.close()
+                try:
+                    command, data = self.parse_client_message(message)
+                    if command == 'publish':
+                        self.publish_files(client_socket, data)
+                    elif command == 'fetch':
+                        self.send_file_sources(client_socket, data)
+                except ValueError:
+                    print("Invalid command received")
+                except Exception as e:
+                    print(f"Error processing command: {e}")
+                    break
+        except socket.error as e:
+            print(f"Socket error with client {client_ip}: {e}")
+        finally:
+            # Remove client data and close the socket
+            self.client_data.pop(client_ip, None)
+            client_socket.close()
 
     def parse_client_message(self, message):
         parts = message.split()
@@ -65,7 +93,7 @@ class FileSharingServer:
                 print(f"An error occurred: {e}")
     def run_command_shell(self):
         while self.server_running:
-                command = input("Enter command: ")
+                command = input("Enter command:(ping <hostname>/discover <hostname>/exit)")
                 if command.startswith("discover"):
                     _, hostname = command.split()
                     self.discover_files(hostname)
